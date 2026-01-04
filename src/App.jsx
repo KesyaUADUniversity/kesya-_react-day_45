@@ -1,50 +1,61 @@
-import React, { useState } from 'react';
-import Child from './components/child';
+import React, { useState, useEffect } from 'react';
+import ProductForm from './components/ProductForm';
+import ProductItem from './components/ProductItem';
 
 const App = () => {
-  const [message, setMessage] = useState('Halo dari Parent!');
-  const [isDark, setIsDark] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  // Ambil data dari API saat komponen mount
+  useEffect(() => {
+    fetch('https://dummyjson.com/products')
+      .then(res => res.json())
+      .then(data => setProducts(data.products));
+  }, []);
+
+  // CREATE
+  const addProduct = (newProduct) => {
+    const fakeId = Math.max(...products.map(p => p.id), 0) + 1;
+    setProducts([...products, { ...newProduct, id: fakeId }]);
+  };
+
+  // UPDATE
+  const updateProduct = (updatedProduct) => {
+    setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    setEditingProduct(null);
+  };
+
+  // DELETE
+  const deleteProduct = (id) => {
+    setProducts(products.filter(p => p.id !== id));
+  };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      {/* Header */}
-      <header className="p-6 bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
-        <h1 className="text-3xl font-extrabold text-center">🚀 React Communication & Styling</h1>
-        <p className="text-center mt-2 text-blue-100">Parent ↔ Child | useState | Tailwind v3.4</p>
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <header className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-blue-400">🛒 adalah pokoknya store</h1>
+        <p className="text-gray-400">data dummy nich </p>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto p-6 space-y-8">
+      {/* Form */}
+      <ProductForm
+        onAdd={addProduct}
+        editingProduct={editingProduct}
+        onUpdate={updateProduct}
+        onCancel={() => setEditingProduct(null)}
+      />
 
-        {/* Message Display */}
-        <div className={`p-5 rounded-xl shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'} transition-all`}>
-          <h2 className="text-xl font-semibold mb-2">📬 Pesan dari Child:</h2>
-          <p className={`text-lg p-3 rounded ${isDark ? 'bg-gray-700' : 'bg-blue-50'} border-l-4 border-blue-500`}>
-            {message}
-          </p>
-        </div>
-
-        {/* Toggle Theme Button */}
-        <button
-          onClick={() => setIsDark(!isDark)}
-          className={`px-6 py-3 rounded-full font-medium transition-all transform hover:scale-105 ${
-            isDark
-              ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400'
-              : 'bg-gray-800 text-white hover:bg-gray-700'
-          }`}
-        >
-          {isDark ? '☀️ Switch to Light' : '🌙 Switch to Dark'}
-        </button>
-
-        {/* Child Component */}
-        <Child onNotify={setMessage} />
-
-      </main>
-
-      {/* Footer */}
-      <footer className={`mt-10 p-4 text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-        © 2026 mrs k - project
-      </footer>
+      {/* Daftar Produk */}
+      <div className="max-w-2xl mx-auto">
+        {products.map(product => (
+          <ProductItem
+            key={product.id}
+            product={product}
+            onEdit={setEditingProduct}
+            onDelete={deleteProduct}
+          />
+        ))}
+      </div>
     </div>
   );
 };
